@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Espetos - Gestão</title>
+    <!-- Tailwind CSS (Simplificado) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Menu Superior -->
+    <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
+        <h1 class="font-bold text-xl">JS ESPETOS</h1>
+        <div class="flex gap-4">
+            <button onclick="mudarAba('mesas')" class="hover:underline">Mesas</button>
+            <button onclick="mudarAba('estoque')" class="hover:underline">Estoque</button>
+            <button onclick="mudarAba('equipe')" class="hover:underline">Equipe</button>
+        </div>
+    </nav>
+
+    <!-- Conteúdo das Abas -->
+    <main class="p-6">
+        
+        <!-- Aba MESAS -->
+        <div id="aba-mesas" class="aba">
+            <div class="flex justify-between mb-6">
+                <h2 class="text-2xl font-bold">Gestão de Mesas</h2>
+                <button class="bg-blue-500 text-white px-4 py-2 rounded">+ Nova Mesa</button>
+            </div>
+            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
+                <!-- Exemplo de Mesa -->
+                <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500">
+                    <p class="font-bold text-gray-500">MESA 01</p>
+                    <p class="text-lg py-2">Disponível</p>
+                    <button class="bg-green-500 text-white w-full py-1 rounded text-sm">ABRIR</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba ESTOQUE -->
+        <div id="aba-estoque" class="aba hidden">
+            <h2 class="text-2xl font-bold mb-4">Cadastro de Produtos</h2>
+            <div class="bg-white p-6 rounded shadow mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" placeholder="Nome" class="border p-2 rounded">
+                    <input type="number" placeholder="Preço Venda" class="border p-2 rounded">
+                    <select class="border p-2 rounded">
+                        <option>Cozinha</option>
+                        <option>Bar</option>
+                        <option>Churrasqueira</option>
+                    </select>
+                </div>
+                <button class="mt-4 bg-green-600 text-white px-6 py-2 rounded">Salvar</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Lógica simples para mudar de aba sem recarregar a página
+        function mudarAba(nomeAba) {
+            document.querySelectorAll('.aba').forEach(div => div.classList.add('hidden'));
+            document.getElementById('aba-' + nomeAba).classList.remove('hidden');
+        }
+
+        // Configuração do Supabase (Coloque suas chaves aqui depois)
+        const supabaseUrl = 'SUA_URL';
+        const supabaseKey = 'SUA_CHAVE';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+</body>
+</html>
