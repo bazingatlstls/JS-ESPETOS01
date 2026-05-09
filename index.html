@@ -3,73 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS Espetos - Gestão</title>
-    <!-- Tailwind CSS (Simplificado) -->
+    <title>JS Espetos - Sistema de Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
 
-    <!-- Menu Superior -->
-    <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
-        <h1 class="font-bold text-xl">JS ESPETOS</h1>
-        <div class="flex gap-4">
-            <button onclick="mudarAba('mesas')" class="hover:underline">Mesas</button>
-            <button onclick="mudarAba('estoque')" class="hover:underline">Estoque</button>
-            <button onclick="mudarAba('equipe')" class="hover:underline">Equipe</button>
+    <!-- TELA DE LOGIN -->
+    <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <h2 class="text-3xl font-bold mb-6 text-slate-800">JS Espetos</h2>
+            <div class="space-y-4">
+                <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <button onclick="fazerLogin()" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-3 rounded-lg font-bold transition">ENTRAR</button>
+                <p id="erro-login" class="text-red-500 text-sm hidden">Credenciais incorretas!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU LATERAL / NAVBAR -->
+    <nav id="nav-principal" class="bg-slate-800 text-white p-4 shadow-md hidden flex flex-wrap gap-4 justify-between items-center">
+        <span class="font-bold text-xl tracking-wider text-orange-400">JS ESPETOS</span>
+        <div class="flex gap-2 overflow-x-auto">
+            <button onclick="mudarAba('mesas')" class="px-3 py-1 rounded hover:bg-slate-700 transition">Mesas</button>
+            <button onclick="mudarAba('estoque')" class="px-3 py-1 rounded hover:bg-slate-700 transition">Estoque</button>
+            <button onclick="mudarAba('equipe')" class="px-3 py-1 rounded hover:bg-slate-700 transition">Equipe</button>
+            <button onclick="mudarAba('admin')" class="px-3 py-1 rounded hover:bg-slate-700 transition">ADM</button>
+            <button onclick="window.location.reload()" class="text-red-400 px-3 py-1">Sair</button>
         </div>
     </nav>
 
-    <!-- Conteúdo das Abas -->
-    <main class="p-6">
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main id="conteudo-sistema" class="p-4 md:p-8 hidden max-w-7xl mx-auto">
         
-        <!-- Aba MESAS -->
+        <!-- ABA: MESAS -->
         <div id="aba-mesas" class="aba">
-            <div class="flex justify-between mb-6">
-                <h2 class="text-2xl font-bold">Gestão de Mesas</h2>
-                <button class="bg-blue-500 text-white px-4 py-2 rounded">+ Nova Mesa</button>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Gerenciamento de Mesas</h2>
+                <button onclick="addMesa()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md">+ Mesa</button>
             </div>
-            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
-                <!-- Exemplo de Mesa -->
-                <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500">
-                    <p class="font-bold text-gray-500">MESA 01</p>
-                    <p class="text-lg py-2">Disponível</p>
-                    <button class="bg-green-500 text-white w-full py-1 rounded text-sm">ABRIR</button>
-                </div>
+            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Mesas carregadas via JS -->
             </div>
         </div>
 
-        <!-- Aba ESTOQUE -->
+        <!-- ABA: ESTOQUE -->
         <div id="aba-estoque" class="aba hidden">
-            <h2 class="text-2xl font-bold mb-4">Cadastro de Produtos</h2>
-            <div class="bg-white p-6 rounded shadow mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="text" placeholder="Nome" class="border p-2 rounded">
-                    <input type="number" placeholder="Preço Venda" class="border p-2 rounded">
-                    <select class="border p-2 rounded">
-                        <option>Cozinha</option>
-                        <option>Bar</option>
-                        <option>Churrasqueira</option>
+            <h2 class="text-2xl font-bold mb-6">Cadastro de Produtos</h2>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8 border border-slate-200">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="prod-nome" placeholder="Nome do Produto" class="border p-2 rounded-lg">
+                    <input type="number" id="prod-custo" placeholder="Preço Custo (R$)" class="border p-2 rounded-lg">
+                    <input type="number" id="prod-venda" placeholder="Preço Venda (R$)" class="border p-2 rounded-lg">
+                    <select id="prod-categoria" class="border p-2 rounded-lg">
+                        <option value="cozinha">Cozinha (Porções)</option>
+                        <option value="bar">Bar (Bebidas)</option>
+                        <option value="churrasqueira">Churrasqueira (Espeto)</option>
                     </select>
                 </div>
-                <button class="mt-4 bg-green-600 text-white px-6 py-2 rounded">Salvar</button>
+                <button onclick="salvarProduto()" class="mt-4 bg-green-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-green-700 transition">SALVAR NO ESTOQUE</button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 border-b">
+                        <tr>
+                            <th class="p-4">Produto</th>
+                            <th class="p-4">Categoria</th>
+                            <th class="p-4">Preço Venda</th>
+                            <th class="p-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-produtos">
+                        <!-- Produtos carregados aqui -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </main>
 
     <script>
-        // Lógica simples para mudar de aba sem recarregar a página
+        // CONFIGURAÇÃO SUPABASE
+        const SUPABASE_URL = "https://wogwftbhfiibzftdrfwg.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvZ3dmdGJoZmlpYnpmdGRyZndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc0ODcsImV4cCI6MjA5Mzg4MzQ4N30.NRUZVrfJVqRJeXRSpMcV-V9H5oxJJfU2QsSkcDURisk";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // LOGIN SIMPLIFICADO (Para o MVP)
+        function fazerLogin() {
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+
+            // Aqui futuramente usaremos auth do supabase, por ora, acesso direto:
+            if(email !== "" && senha !== "") {
+                document.getElementById('tela-login').classList.add('hidden');
+                document.getElementById('nav-principal').classList.remove('hidden');
+                document.getElementById('conteudo-sistema').classList.remove('hidden');
+                carregarMesas();
+            } else {
+                document.getElementById('erro-login').classList.remove('hidden');
+            }
+        }
+
+        // NAVEGAÇÃO
         function mudarAba(nomeAba) {
             document.querySelectorAll('.aba').forEach(div => div.classList.add('hidden'));
             document.getElementById('aba-' + nomeAba).classList.remove('hidden');
+            if(nomeAba === 'estoque') carregarProdutos();
+            if(nomeAba === 'mesas') carregarMesas();
         }
 
-        // Configuração do Supabase (Coloque suas chaves aqui depois)
-        const supabaseUrl = 'SUA_URL';
-        const supabaseKey = 'SUA_CHAVE';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // LÓGICA DE MESAS
+        async function carregarMesas() {
+            const { data, error } = await _supabase.from('mesas').select('*').order('numero', { ascending: true });
+            const container = document.getElementById('lista-mesas');
+            container.innerHTML = '';
+
+            data?.forEach(mesa => {
+                const corStatus = mesa.status === 'Livre' ? 'border-green-500' : 'border-red-500';
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-xl shadow border-t-8 ${corStatus} text-center hover:scale-105 transition transform cursor-pointer">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Mesa</span>
+                        <h3 class="text-2xl font-black text-slate-800">${mesa.numero}</h3>
+                        <p class="text-sm text-slate-500 mb-2 truncate">${mesa.apelido || '---'}</p>
+                        <p class="text-blue-600 font-bold">R$ ${mesa.valor_total.toFixed(2)}</p>
+                    </div>
+                `;
+            });
+        }
+
+        async function addMesa() {
+            const num = prompt("Número da Mesa:");
+            if(num) {
+                await _supabase.from('mesas').insert([{ numero: num, status: 'Livre', valor_total: 0 }]);
+                carregarMesas();
+            }
+        }
+
+        // LÓGICA DE ESTOQUE
+        async function salvarProduto() {
+            const nome = document.getElementById('prod-nome').value;
+            const custo = document.getElementById('prod-custo').value;
+            const venda = document.getElementById('prod-venda').value;
+            const cat = document.getElementById('prod-categoria').value;
+
+            const { error } = await _supabase.from('produtos').insert([
+                { nome, preco_custo: custo, preco_venda: venda, categoria: cat }
+            ]);
+
+            if(!error) {
+                alert("Produto Salvo!");
+                carregarProdutos();
+            }
+        }
+
+        async function carregarProdutos() {
+            const { data } = await _supabase.from('produtos').select('*').order('nome');
+            const tabela = document.getElementById('tabela-produtos');
+            tabela.innerHTML = '';
+
+            data?.forEach(p => {
+                tabela.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-4 font-semibold">${p.nome}</td>
+                        <td class="p-4 capitalize text-slate-500">${p.categoria}</td>
+                        <td class="p-4 font-bold text-green-600">R$ ${p.preco_venda}</td>
+                        <td class="p-4">
+                            <button class="text-red-500 hover:underline">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
     </script>
 </body>
 </html>
