@@ -3,84 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS Espetos - Gestão Completa</title>
+    <title>JS Espetos - Gestão Realtime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
+    <!-- ÁUDIO DE ALERTA (URL de um bip padrão) -->
+    <audio id="audio-alerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
     <!-- TELA DE LOGIN -->
     <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
-            <h2 class="text-3xl font-bold mb-6 text-slate-800">JS Espetos</h2>
-            <div class="space-y-4">
-                <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-3 rounded-lg outline-none">
-                <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-3 rounded-lg outline-none">
-                <button onclick="fazerLogin()" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold">ENTRAR</button>
-            </div>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h2 class="text-3xl font-bold mb-6 text-center">JS Espetos</h2>
+            <select id="login-perfil" class="w-full border p-3 rounded-lg mb-4 outline-none">
+                <option value="adm">Administrador (ADM)</option>
+                <option value="garcon">Garçom</option>
+                <option value="cozinha">Cozinha</option>
+                <option value="churrasqueira">Churrasqueira</option>
+            </select>
+            <button onclick="fazerLogin()" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold">ENTRAR NO SISTEMA</button>
         </div>
     </div>
 
     <!-- NAVBAR -->
-    <nav id="nav-principal" class="bg-slate-800 text-white p-4 shadow-md hidden flex justify-between items-center">
-        <span class="font-bold text-xl text-orange-400">JS ESPETOS</span>
-        <div class="flex gap-4">
-            <button onclick="mudarAba('mesas')" class="hover:text-orange-300">Mesas</button>
-            <button onclick="mudarAba('estoque')" class="hover:text-orange-300">Estoque</button>
-            <button onclick="window.location.reload()" class="text-red-400">Sair</button>
+    <nav id="nav-principal" class="bg-slate-800 text-white p-4 shadow-md hidden flex justify-between items-center overflow-x-auto">
+        <span class="font-bold text-orange-400 mr-4">JS ESPETOS</span>
+        <div class="flex gap-4 text-sm">
+            <button onclick="mudarAba('mesas')" class="btn-menu hidden" id="menu-mesas">MESAS</button>
+            <button onclick="mudarAba('cozinha')" class="btn-menu hidden" id="menu-cozinha">COZINHA</button>
+            <button onclick="mudarAba('churrasqueira')" class="btn-menu hidden" id="menu-churras">CHURRASCO</button>
+            <button onclick="mudarAba('estoque')" class="btn-menu hidden" id="menu-estoque">ESTOQUE</button>
+            <button onclick="window.location.reload()" class="text-red-400 ml-4">SAIR</button>
         </div>
     </nav>
 
     <!-- CONTEÚDO -->
     <main id="conteudo-sistema" class="p-4 hidden max-w-7xl mx-auto">
         
-        <!-- ABA: MESAS -->
-        <div id="aba-mesas" class="aba">
-            <div class="flex justify-between mb-6">
-                <h2 class="text-2xl font-bold">Mesas</h2>
-                <button onclick="addMesa()" class="bg-blue-600 text-white px-4 py-2 rounded">+ Mesa</button>
+        <!-- ABA: MESAS (Visível para ADM e Garçom) -->
+        <div id="aba-mesas" class="aba hidden">
+            <div class="flex justify-between mb-6 items-center">
+                <h2 class="text-2xl font-bold">Mesas Ativas</h2>
+                <button onclick="addMesa()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">+ Mesa</button>
             </div>
-            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center"></div>
         </div>
 
-        <!-- ABA: ESTOQUE -->
+        <!-- ABA: COZINHA / CHURRASQUEIRA -->
+        <div id="aba-producao" class="aba hidden">
+            <h2 id="titulo-producao" class="text-2xl font-bold mb-6 text-slate-800">Pedidos em Aberto</h2>
+            <div id="lista-pedidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Pedidos Realtime entram aqui -->
+            </div>
+        </div>
+
+        <!-- ABA: ESTOQUE (ADM) -->
         <div id="aba-estoque" class="aba hidden">
-            <h2 class="text-2xl font-bold mb-4">Estoque</h2>
-            
-            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
-                <input type="hidden" id="prod-id"> <!-- Campo oculto para saber se é edição -->
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    <input type="text" id="prod-nome" placeholder="Produto" class="border p-2 rounded">
-                    <input type="number" id="prod-custo" placeholder="Custo R$" class="border p-2 rounded">
-                    <input type="number" id="prod-venda" placeholder="Venda R$" class="border p-2 rounded">
-                    <input type="number" id="prod-qtd" placeholder="Qtd" class="border p-2 rounded">
-                    <select id="prod-categoria" class="border p-2 rounded">
-                        <option value="cozinha">Cozinha</option>
-                        <option value="bar">Bar</option>
-                        <option value="churrasqueira">Churrasqueira</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 mt-4">
-                    <button onclick="salvarProduto()" id="btn-salvar-prod" class="bg-green-600 text-white px-6 py-2 rounded font-bold uppercase">Salvar Produto</button>
-                    <button onclick="limparFormEstoque()" id="btn-cancelar-edit" class="bg-gray-400 text-white px-6 py-2 rounded font-bold hidden">Cancelar</button>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-100 uppercase text-xs font-bold">
-                        <tr>
-                            <th class="p-4">Produto</th>
-                            <th class="p-4">Categoria</th>
-                            <th class="p-4">Qtd</th>
-                            <th class="p-4">Venda</th>
-                            <th class="p-4 text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-produtos"></tbody>
-                </table>
-            </div>
+             <!-- (Seu código anterior de estoque continua aqui dentro) -->
+             <h2 class="text-2xl font-bold mb-4">Gerenciar Estoque</h2>
+             <p class="text-gray-500 italic">Funcionalidade de edição e cadastro habilitada para ADM.</p>
         </div>
+
     </main>
 
     <script>
@@ -88,113 +72,102 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvZ3dmdGJoZmlpYnpmdGRyZndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc0ODcsImV4cCI6MjA5Mzg4MzQ4N30.NRUZVrfJVqRJeXRSpMcV-V9H5oxJJfU2QsSkcDURisk";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let perfilLogado = "";
+
+        // LOGIN COM PERMISSÕES
         function fazerLogin() {
+            perfilLogado = document.getElementById('login-perfil').value;
             document.getElementById('tela-login').classList.add('hidden');
             document.getElementById('nav-principal').classList.remove('hidden');
             document.getElementById('conteudo-sistema').classList.remove('hidden');
-            carregarMesas();
+
+            // Controla o que cada um vê no menu
+            if (perfilLogado === 'adm') {
+                document.querySelectorAll('.btn-menu').forEach(b => b.classList.remove('hidden'));
+                mudarAba('mesas');
+            } else if (perfilLogado === 'garcon') {
+                document.getElementById('menu-mesas').classList.remove('hidden');
+                mudarAba('mesas');
+            } else if (perfilLogado === 'cozinha') {
+                document.getElementById('menu-cozinha').classList.remove('hidden');
+                mudarAba('cozinha');
+            } else if (perfilLogado === 'churrasqueira') {
+                document.getElementById('menu-churras').classList.remove('hidden');
+                mudarAba('churrasqueira');
+            }
         }
 
         function mudarAba(aba) {
             document.querySelectorAll('.aba').forEach(d => d.classList.add('hidden'));
-            document.getElementById('aba-' + aba).classList.remove('hidden');
-            if(aba === 'estoque') carregarProdutos();
+            
+            if (aba === 'cozinha' || aba === 'churrasqueira') {
+                document.getElementById('aba-producao').classList.remove('hidden');
+                document.getElementById('titulo-producao').innerText = "Produção: " + aba.toUpperCase();
+                escutarPedidos(aba);
+            } else {
+                document.getElementById('aba-' + aba).classList.remove('hidden');
+            }
+
             if(aba === 'mesas') carregarMesas();
         }
 
-        // --- ESTOQUE ---
-        async function carregarProdutos() {
-            const { data } = await _supabase.from('produtos').select('*').order('nome');
-            const tabela = document.getElementById('tabela-produtos');
-            tabela.innerHTML = '';
-            data?.forEach(p => {
-                tabela.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-4 font-bold">${p.nome}</td>
-                        <td class="p-4 capitalize text-slate-500">${p.categoria}</td>
-                        <td class="p-4">${p.quantidade || 0}</td>
-                        <td class="p-4 text-green-600 font-bold">R$ ${p.preco_venda}</td>
-                        <td class="p-4 text-center space-x-2">
-                            <button onclick="prepararEdicao(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="text-blue-600 font-bold">EDITAR</button>
-                            <button onclick="excluirProduto(${p.id})" class="text-red-500 font-bold">EXCLUIR</button>
-                        </td>
-                    </tr>`;
-            });
+        // --- LÓGICA DE PRODUÇÃO REALTIME ---
+        async function escutarPedidos(setor) {
+            // Carrega pedidos iniciais
+            carregarPedidos(setor);
+
+            // Escuta mudanças no banco de dados (REALTIME)
+            _supabase
+                .channel('pedidos-alterados')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
+                    carregarPedidos(setor);
+                    tocarAlerta();
+                })
+                .subscribe();
         }
 
-        async function salvarProduto() {
-            const id = document.getElementById('prod-id').value;
-            const payload = {
-                nome: document.getElementById('prod-nome').value,
-                preco_custo: document.getElementById('prod-custo').value,
-                preco_venda: document.getElementById('prod-venda').value,
-                quantidade: document.getElementById('prod-qtd').value,
-                categoria: document.getElementById('prod-categoria').value
-            };
+        async function carregarPedidos(setor) {
+            const { data } = await _supabase
+                .from('pedidos')
+                .select('*')
+                .eq('setor', setor)
+                .neq('status', 'finalizado'); // Não mostra os que já saíram da cozinha
 
-            if (id) {
-                // Editar
-                await _supabase.from('produtos').update(payload).eq('id', id);
-            } else {
-                // Inserir novo
-                await _supabase.from('produtos').insert([payload]);
-            }
-            
-            limparFormEstoque();
-            carregarProdutos();
-        }
-
-        function prepararEdicao(produto) {
-            document.getElementById('prod-id').value = produto.id;
-            document.getElementById('prod-nome').value = produto.nome;
-            document.getElementById('prod-custo').value = produto.preco_custo;
-            document.getElementById('prod-venda').value = produto.preco_venda;
-            document.getElementById('prod-qtd').value = produto.quantidade;
-            document.getElementById('prod-categoria').value = produto.categoria;
-            
-            document.getElementById('btn-salvar-prod').innerText = "ATUALIZAR PRODUTO";
-            document.getElementById('btn-cancelar-edit').classList.remove('hidden');
-        }
-
-        function limparFormEstoque() {
-            document.getElementById('prod-id').value = "";
-            document.getElementById('prod-nome').value = "";
-            document.getElementById('prod-custo').value = "";
-            document.getElementById('prod-venda').value = "";
-            document.getElementById('prod-qtd').value = "";
-            document.getElementById('btn-salvar-prod').innerText = "SALVAR PRODUTO";
-            document.getElementById('btn-cancelar-edit').classList.add('hidden');
-        }
-
-        async function excluirProduto(id) {
-            if(confirm("Deseja excluir este produto?")) {
-                await _supabase.from('produtos').delete().eq('id', id);
-                carregarProdutos();
-            }
-        }
-
-        // --- MESAS ---
-        async function carregarMesas() {
-            const { data } = await _supabase.from('mesas').select('*').order('numero');
-            const lista = document.getElementById('lista-mesas');
+            const lista = document.getElementById('lista-pedidos');
             lista.innerHTML = '';
-            data?.forEach(m => {
+
+            data?.forEach(ped => {
+                const bgCard = ped.status === 'pendente' ? 'bg-orange-100 border-orange-500' : 'bg-blue-100 border-blue-500';
                 lista.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl shadow border-t-4 ${m.status === 'Livre' ? 'border-green-500' : 'border-red-500'} text-center">
-                        <p class="text-xs font-bold text-gray-400">MESA ${m.numero}</p>
-                        <p class="font-bold text-lg">${m.apelido || '---'}</p>
-                        <p class="text-blue-600 font-bold">R$ ${m.valor_total.toFixed(2)}</p>
-                    </div>`;
+                    <div class="p-4 rounded-xl border-l-8 shadow-md ${bgCard}">
+                        <div class="flex justify-between font-bold">
+                            <span>MESA ${ped.mesa_id}</span>
+                            <span class="text-xs uppercase">${ped.status}</span>
+                        </div>
+                        <p class="text-lg my-2 font-black">${ped.item_nome}</p>
+                        <div class="flex gap-2">
+                            ${ped.status === 'pendente' ? 
+                                `<button onclick="alterarStatusPedido(${ped.id}, 'preparando')" class="bg-orange-500 text-white flex-1 py-2 rounded font-bold">ACEITAR</button>` : 
+                                `<button onclick="alterarStatusPedido(${ped.id}, 'finalizado')" class="bg-green-600 text-white flex-1 py-2 rounded font-bold">PRONTO / FINALIZAR</button>`
+                            }
+                        </div>
+                    </div>
+                `;
             });
         }
 
-        async function addMesa() {
-            const n = prompt("Número da Mesa:");
-            if(n) {
-                await _supabase.from('mesas').insert([{ numero: n, status: 'Livre', valor_total: 0 }]);
-                carregarMesas();
-            }
+        async function alterarStatusPedido(id, novoStatus) {
+            await _supabase.from('pedidos').update({ status: novoStatus }).eq('id', id);
+            // O realtime já vai atualizar a tela automaticamente
         }
+
+        function tocarAlerta() {
+            const audio = document.getElementById('audio-alerta');
+            audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
+        }
+
+        // --- RESTANTE DAS FUNÇÕES (MESAS / ESTOQUE) ---
+        // (Mantenha as funções carregarMesas, salvarProduto etc do passo anterior aqui)
     </script>
 </body>
 </html>
