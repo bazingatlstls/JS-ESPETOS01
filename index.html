@@ -3,66 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS Espetos - Gestão Realtime</title>
+    <title>JS Espetos - Gestão Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans text-slate-800">
 
-    <!-- ÁUDIO DE ALERTA (URL de um bip padrão) -->
     <audio id="audio-alerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
     <!-- TELA DE LOGIN -->
-    <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-3xl font-bold mb-6 text-center">JS Espetos</h2>
-            <select id="login-perfil" class="w-full border p-3 rounded-lg mb-4 outline-none">
+    <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <h2 class="text-3xl font-bold mb-6">JS Espetos</h2>
+            <select id="login-perfil" class="w-full border p-3 rounded-lg mb-4 outline-none border-slate-300">
                 <option value="adm">Administrador (ADM)</option>
                 <option value="garcon">Garçom</option>
                 <option value="cozinha">Cozinha</option>
                 <option value="churrasqueira">Churrasqueira</option>
             </select>
-            <button onclick="fazerLogin()" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold">ENTRAR NO SISTEMA</button>
+            <button onclick="fazerLogin()" class="bg-blue-600 text-white w-full py-3 rounded-lg font-bold shadow-lg active:scale-95 transition">ENTRAR</button>
         </div>
     </div>
 
     <!-- NAVBAR -->
-    <nav id="nav-principal" class="bg-slate-800 text-white p-4 shadow-md hidden flex justify-between items-center overflow-x-auto">
-        <span class="font-bold text-orange-400 mr-4">JS ESPETOS</span>
-        <div class="flex gap-4 text-sm">
-            <button onclick="mudarAba('mesas')" class="btn-menu hidden" id="menu-mesas">MESAS</button>
-            <button onclick="mudarAba('cozinha')" class="btn-menu hidden" id="menu-cozinha">COZINHA</button>
-            <button onclick="mudarAba('churrasqueira')" class="btn-menu hidden" id="menu-churras">CHURRASCO</button>
-            <button onclick="mudarAba('estoque')" class="btn-menu hidden" id="menu-estoque">ESTOQUE</button>
-            <button onclick="window.location.reload()" class="text-red-400 ml-4">SAIR</button>
+    <nav id="nav-principal" class="bg-slate-800 text-white p-4 shadow-md hidden sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <span class="font-bold text-orange-400 text-lg">JS ESPETOS</span>
+            <div class="flex gap-3 overflow-x-auto text-xs font-semibold uppercase tracking-wider">
+                <button id="btn-mesas" onclick="mudarAba('mesas')" class="hidden px-2 py-1">Mesas</button>
+                <button id="btn-producao" onclick="mudarAba('producao')" class="hidden px-2 py-1">Produção</button>
+                <button id="btn-estoque" onclick="mudarAba('estoque')" class="hidden px-2 py-1">Estoque</button>
+                <button id="btn-notas" onclick="mudarAba('notas')" class="hidden px-2 py-1">Notas/Fiado</button>
+                <button onclick="window.location.reload()" class="text-red-400">Sair</button>
+            </div>
         </div>
     </nav>
 
-    <!-- CONTEÚDO -->
-    <main id="conteudo-sistema" class="p-4 hidden max-w-7xl mx-auto">
+    <main id="conteudo-sistema" class="p-4 md:p-8 hidden max-w-7xl mx-auto">
         
-        <!-- ABA: MESAS (Visível para ADM e Garçom) -->
+        <!-- ABA: MESAS -->
         <div id="aba-mesas" class="aba hidden">
-            <div class="flex justify-between mb-6 items-center">
-                <h2 class="text-2xl font-bold">Mesas Ativas</h2>
-                <button onclick="addMesa()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">+ Mesa</button>
+            <div class="flex justify-between mb-6">
+                <h2 class="text-2xl font-bold">Mesas</h2>
+                <button onclick="addMesa()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">+ Mesa</button>
             </div>
-            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center"></div>
+            <div id="lista-mesas" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
         </div>
 
-        <!-- ABA: COZINHA / CHURRASQUEIRA -->
+        <!-- ABA: PRODUÇÃO (COZINHA/CHURRAS) -->
         <div id="aba-producao" class="aba hidden">
-            <h2 id="titulo-producao" class="text-2xl font-bold mb-6 text-slate-800">Pedidos em Aberto</h2>
-            <div id="lista-pedidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Pedidos Realtime entram aqui -->
+            <h2 id="titulo-producao" class="text-2xl font-bold mb-6 italic">Aguardando pedidos...</h2>
+            <div id="lista-pedidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- ABA: ESTOQUE -->
+        <div id="aba-estoque" class="aba hidden text-sm">
+            <h2 class="text-2xl font-bold mb-4">Gerenciar Estoque</h2>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6 border">
+                <input type="hidden" id="prod-id">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input type="text" id="prod-nome" placeholder="Produto" class="border p-2 rounded">
+                    <input type="number" id="prod-custo" placeholder="Custo R$" class="border p-2 rounded">
+                    <input type="number" id="prod-venda" placeholder="Venda R$" class="border p-2 rounded">
+                    <input type="number" id="prod-qtd" placeholder="Qtd" class="border p-2 rounded">
+                    <select id="prod-categoria" class="border p-2 rounded">
+                        <option value="cozinha">Cozinha</option>
+                        <option value="bar">Bar</option>
+                        <option value="churrasqueira">Churrasqueira</option>
+                    </select>
+                </div>
+                <button onclick="salvarProduto()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded font-bold">SALVAR PRODUTO</button>
+            </div>
+            <div id="lista-estoque" class="bg-white rounded-xl shadow border overflow-hidden">
+                 <table class="w-full text-left">
+                    <thead class="bg-slate-50 border-b">
+                        <tr><th class="p-4">Item</th><th class="p-4">Qtd</th><th class="p-4">Venda</th><th class="p-4">Ações</th></tr>
+                    </thead>
+                    <tbody id="tabela-produtos"></tbody>
+                 </table>
             </div>
         </div>
 
-        <!-- ABA: ESTOQUE (ADM) -->
-        <div id="aba-estoque" class="aba hidden">
-             <!-- (Seu código anterior de estoque continua aqui dentro) -->
-             <h2 class="text-2xl font-bold mb-4">Gerenciar Estoque</h2>
-             <p class="text-gray-500 italic">Funcionalidade de edição e cadastro habilitada para ADM.</p>
+        <!-- ABA: NOTAS (FIADO) -->
+        <div id="aba-notas" class="aba hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-white text-center">
+                <div class="bg-orange-500 p-6 rounded-xl shadow-lg">
+                    <p class="text-sm uppercase font-bold">Total Fiado</p>
+                    <h3 id="dash-valor-notas" class="text-3xl font-black">R$ 0,00</h3>
+                </div>
+                <div class="bg-blue-600 p-6 rounded-xl shadow-lg">
+                    <p class="text-sm uppercase font-bold">Notas em Aberto</p>
+                    <h3 id="dash-qtd-notas" class="text-3xl font-black">0</h3>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow border overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 border-b">
+                        <tr><th class="p-4">Nome</th><th class="p-4">Data</th><th class="p-4">Valor</th><th class="p-4 text-center">Ação</th></tr>
+                    </thead>
+                    <tbody id="tabela-notas"></tbody>
+                </table>
+            </div>
         </div>
 
     </main>
@@ -72,102 +113,158 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvZ3dmdGJoZmlpYnpmdGRyZndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc0ODcsImV4cCI6MjA5Mzg4MzQ4N30.NRUZVrfJVqRJeXRSpMcV-V9H5oxJJfU2QsSkcDURisk";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let perfilLogado = "";
+        let perfil = "";
+        let ultimoCountPedidos = 0;
 
-        // LOGIN COM PERMISSÕES
         function fazerLogin() {
-            perfilLogado = document.getElementById('login-perfil').value;
+            perfil = document.getElementById('login-perfil').value;
             document.getElementById('tela-login').classList.add('hidden');
             document.getElementById('nav-principal').classList.remove('hidden');
             document.getElementById('conteudo-sistema').classList.remove('hidden');
 
-            // Controla o que cada um vê no menu
-            if (perfilLogado === 'adm') {
-                document.querySelectorAll('.btn-menu').forEach(b => b.classList.remove('hidden'));
+            if(perfil === 'adm') {
+                ['btn-mesas','btn-producao','btn-estoque','btn-notas'].forEach(id => document.getElementById(id).classList.remove('hidden'));
                 mudarAba('mesas');
-            } else if (perfilLogado === 'garcon') {
-                document.getElementById('menu-mesas').classList.remove('hidden');
+            } else if(perfil === 'garcon') {
+                document.getElementById('btn-mesas').classList.remove('hidden');
                 mudarAba('mesas');
-            } else if (perfilLogado === 'cozinha') {
-                document.getElementById('menu-cozinha').classList.remove('hidden');
-                mudarAba('cozinha');
-            } else if (perfilLogado === 'churrasqueira') {
-                document.getElementById('menu-churras').classList.remove('hidden');
-                mudarAba('churrasqueira');
+            } else {
+                document.getElementById('btn-producao').classList.remove('hidden');
+                mudarAba('producao');
             }
+            
+            // Inicia o Polling (Verificação automática a cada 7 segundos)
+            setInterval(executarPolling, 7000);
         }
 
         function mudarAba(aba) {
             document.querySelectorAll('.aba').forEach(d => d.classList.add('hidden'));
+            document.getElementById('aba-' + aba).classList.remove('hidden');
             
-            if (aba === 'cozinha' || aba === 'churrasqueira') {
-                document.getElementById('aba-producao').classList.remove('hidden');
-                document.getElementById('titulo-producao').innerText = "Produção: " + aba.toUpperCase();
-                escutarPedidos(aba);
-            } else {
-                document.getElementById('aba-' + aba).classList.remove('hidden');
+            if(aba === 'mesas') carregarMesas();
+            if(aba === 'producao') carregarProducao();
+            if(aba === 'estoque') carregarEstoque();
+            if(aba === 'notas') carregarNotas();
+        }
+
+        // --- POLLING (O CORAÇÃO DO SISTEMA GRATUITO) ---
+        async function executarPolling() {
+            // Se estiver na aba de produção, atualiza a lista
+            if (!document.getElementById('aba-producao').classList.contains('hidden')) {
+                carregarProducao();
             }
 
-            if(aba === 'mesas') carregarMesas();
+            // Verifica se tem pedidos pendentes para tocar o som
+            const setorBusca = perfil === 'adm' ? 'cozinha' : perfil; // simplificação
+            if(setorBusca === 'cozinha' || setorBusca === 'churrasqueira') {
+                const { count } = await _supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('setor', setorBusca).eq('status', 'pendente');
+                if(count > ultimoCountPedidos) {
+                    document.getElementById('audio-alerta').play();
+                }
+                ultimoCountPedidos = count || 0;
+            }
         }
 
-        // --- LÓGICA DE PRODUÇÃO REALTIME ---
-        async function escutarPedidos(setor) {
-            // Carrega pedidos iniciais
-            carregarPedidos(setor);
+        // --- LÓGICA DE PRODUÇÃO ---
+        async function carregarProducao() {
+            let setorFiltro = perfil;
+            if(perfil === 'adm') setorFiltro = 'cozinha'; // ADM vê cozinha por padrão
 
-            // Escuta mudanças no banco de dados (REALTIME)
-            _supabase
-                .channel('pedidos-alterados')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
-                    carregarPedidos(setor);
-                    tocarAlerta();
-                })
-                .subscribe();
-        }
-
-        async function carregarPedidos(setor) {
-            const { data } = await _supabase
-                .from('pedidos')
-                .select('*')
-                .eq('setor', setor)
-                .neq('status', 'finalizado'); // Não mostra os que já saíram da cozinha
-
+            const { data } = await _supabase.from('pedidos').select('*').eq('setor', setorFiltro).neq('status', 'finalizado');
             const lista = document.getElementById('lista-pedidos');
             lista.innerHTML = '';
+            document.getElementById('titulo-producao').innerText = "PEDIDOS: " + setorFiltro.toUpperCase();
 
-            data?.forEach(ped => {
-                const bgCard = ped.status === 'pendente' ? 'bg-orange-100 border-orange-500' : 'bg-blue-100 border-blue-500';
+            data?.forEach(p => {
+                const cor = p.status === 'pendente' ? 'border-orange-500 bg-orange-50' : 'border-blue-500 bg-blue-50';
                 lista.innerHTML += `
-                    <div class="p-4 rounded-xl border-l-8 shadow-md ${bgCard}">
-                        <div class="flex justify-between font-bold">
-                            <span>MESA ${ped.mesa_id}</span>
-                            <span class="text-xs uppercase">${ped.status}</span>
-                        </div>
-                        <p class="text-lg my-2 font-black">${ped.item_nome}</p>
-                        <div class="flex gap-2">
-                            ${ped.status === 'pendente' ? 
-                                `<button onclick="alterarStatusPedido(${ped.id}, 'preparando')" class="bg-orange-500 text-white flex-1 py-2 rounded font-bold">ACEITAR</button>` : 
-                                `<button onclick="alterarStatusPedido(${ped.id}, 'finalizado')" class="bg-green-600 text-white flex-1 py-2 rounded font-bold">PRONTO / FINALIZAR</button>`
-                            }
-                        </div>
-                    </div>
-                `;
+                    <div class="p-4 rounded-xl border-l-8 shadow ${cor}">
+                        <div class="flex justify-between font-black"><span>MESA ${p.mesa_id}</span></div>
+                        <p class="text-xl my-2 uppercase font-bold">${p.item_nome}</p>
+                        <button onclick="mudarStatusPed(${p.id}, '${p.status}')" class="w-full py-2 rounded bg-slate-800 text-white font-bold uppercase text-xs">
+                            ${p.status === 'pendente' ? 'ACEITAR PEDIDO' : 'FINALIZAR'}
+                        </button>
+                    </div>`;
             });
         }
 
-        async function alterarStatusPedido(id, novoStatus) {
-            await _supabase.from('pedidos').update({ status: novoStatus }).eq('id', id);
-            // O realtime já vai atualizar a tela automaticamente
+        async function mudarStatusPed(id, statusAtual) {
+            const novo = statusAtual === 'pendente' ? 'preparando' : 'finalizado';
+            await _supabase.from('pedidos').update({ status: novo }).eq('id', id);
+            carregarProducao();
         }
 
-        function tocarAlerta() {
-            const audio = document.getElementById('audio-alerta');
-            audio.play().catch(e => console.log("Áudio bloqueado pelo navegador até o primeiro clique."));
+        // --- LÓGICA DE NOTAS (FIADO) ---
+        async function carregarNotas() {
+            const { data } = await _supabase.from('vendas').select('*').eq('tipo_pagamento', 'fiado').order('criado_em', {ascending: false});
+            const tabela = document.getElementById('tabela-notas');
+            let total = 0;
+            tabela.innerHTML = '';
+
+            data?.forEach(n => {
+                total += n.valor_total;
+                tabela.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-4 font-bold uppercase">${n.cliente_nome}</td>
+                        <td class="p-4 text-xs">${new Date(n.criado_em).toLocaleDateString()}</td>
+                        <td class="p-4 text-orange-600 font-bold">R$ ${n.valor_total.toFixed(2)}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="baixarNota(${n.id})" class="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-bold">RECEBER</button>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('dash-valor-notas').innerText = "R$ " + total.toFixed(2);
+            document.getElementById('dash-qtd-notas').innerText = data?.length || 0;
         }
 
-        // --- RESTANTE DAS FUNÇÕES (MESAS / ESTOQUE) ---
-        // (Mantenha as funções carregarMesas, salvarProduto etc do passo anterior aqui)
+        async function baixarNota(id) {
+            if(confirm("Confirmar recebimento desta nota?")) {
+                await _supabase.from('vendas').update({ tipo_pagamento: 'recebido' }).eq('id', id);
+                carregarNotas();
+            }
+        }
+
+        // --- FUNÇÕES DE ESTOQUE E MESAS (MESMA LÓGICA ANTERIOR) ---
+        async function carregarEstoque() {
+            const { data } = await _supabase.from('produtos').select('*').order('nome');
+            const tabela = document.getElementById('tabela-produtos');
+            tabela.innerHTML = '';
+            data?.forEach(p => {
+                tabela.innerHTML += `<tr class="border-b"><td class="p-4 font-bold">${p.nome}</td><td class="p-4">${p.quantidade}</td><td class="p-4 font-bold">R$ ${p.preco_venda}</td><td class="p-4"><button onclick="excluirProd(${p.id})" class="text-red-500">Excluir</button></td></tr>`;
+            });
+        }
+
+        async function carregarMesas() {
+            const { data } = await _supabase.from('mesas').select('*').order('numero');
+            const lista = document.getElementById('lista-mesas');
+            lista.innerHTML = '';
+            data?.forEach(m => {
+                lista.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow border-t-4 ${m.status === 'Livre' ? 'border-green-500' : 'border-red-500'}">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Mesa ${m.numero}</p>
+                        <p class="font-bold text-lg truncate">${m.apelido || '---'}</p>
+                        <p class="text-blue-600 font-bold">R$ ${m.valor_total.toFixed(2)}</p>
+                    </div>`;
+            });
+        }
+
+        async function addMesa() {
+            const n = prompt("Número da Mesa:");
+            if(n) { await _supabase.from('mesas').insert([{ numero: n, status: 'Livre', valor_total: 0 }]); carregarMesas(); }
+        }
+
+        async function salvarProduto() {
+            const p = {
+                nome: document.getElementById('prod-nome').value,
+                preco_custo: document.getElementById('prod-custo').value,
+                preco_venda: document.getElementById('prod-venda').value,
+                quantidade: document.getElementById('prod-qtd').value,
+                categoria: document.getElementById('prod-categoria').value
+            };
+            await _supabase.from('produtos').insert([p]);
+            mudarAba('estoque');
+        }
     </script>
 </body>
 </html>
